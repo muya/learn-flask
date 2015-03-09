@@ -1,5 +1,10 @@
 # all the imports
 import sqlite3
+
+import logging
+from logging import FileHandler
+from logging import Formatter as LogFormatter
+
 from flask import (Flask, request, session, g, redirect, url_for, abort,
                    render_template, flash)
 from contextlib import closing
@@ -63,6 +68,8 @@ def add_entry():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
+    app.logger.error("login called")
+
     if request.method == "POST":
         if request.form["username"] != app.config["USERNAME"]:
             error = "Invalid username"
@@ -81,6 +88,13 @@ def logout():
     session.pop("logged_in", None)
     flash("Logged out!")
     return redirect(url_for("show_entries"))
+
+# config logging
+file_handler = FileHandler(app.config["LOG_FILE"])
+file_handler.setLevel(logging.WARNING)
+file_handler.setFormatter(LogFormatter(
+    "%(asctime)s [%(levelname)s]: %(message)s in %(pathname)s:%(lineno)d"))
+app.logger.addHandler(file_handler)
 
 if __name__ == "__main__":
     app.run(host=app.config["SERVER_HOST"])
